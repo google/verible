@@ -16,7 +16,29 @@
 
 set -e
 
-cd $(dirname "$0")/..
+# Install gflags2man
+
+wget --no-verbose https://repo.anaconda.com/miniconda/Miniconda2-latest-Linux-x86_64.sh; \
+  chmod a+x Miniconda2-latest-Linux-x86_64.sh; \
+  ./Miniconda2-latest-Linux-x86_64.sh -p /usr/local -b -f; \
+  conda --version
+which pip
+/usr/local/bin/pip install python-gflags
+chmod a+x /usr/local/bin/gflags2man.py
+ln -s /usr/local/bin/gflags2man.py /usr/bin/gflags2man
+gflags2man
+
+# Build Verible
+
+which bazel
+bazel --version
+
+bazel build --workspace_status_command=bazel/build-version.sh $BAZEL_OPTS //...
+
+echo "REPO_SLUG: $REPO_SLUG"
+echo "GIT_DATE: $GIT_DATE"
+echo "GIT_HASH: $GIT_HASH"
+echo "GIT_VERSION: $GIT_VERSION"
 
 ./.github/workflows/github-pages-setup.sh
-./.github/workflows/github-releases-setup.sh /out
+./.github/workflows/github-releases-setup.sh /wrk/out/
