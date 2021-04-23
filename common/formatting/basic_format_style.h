@@ -39,6 +39,11 @@ struct BasicFormatStyle {
   // exceeding the column limit.  Additional penalty of 1 is incurred for each
   // character over the limit.
   int over_column_limit_penalty = 100;
+
+  int line_break_penalty = 2;
+
+  // Enable experimental tree shaping
+  bool enable_experimental_tree_reshaper = false;
 };
 
 // Control how a section of code is indented.

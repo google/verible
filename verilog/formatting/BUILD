@@ -137,6 +137,7 @@ cc_library(
         "//common/formatting:format_token",
         "//common/formatting:line_wrap_searcher",
         "//common/formatting:token_partition_tree",
+        "//common/formatting:tree_reshaper",
         "//common/formatting:unwrapped_line",
         "//common/formatting:verification",
         "//common/strings:diff",
@@ -187,6 +188,23 @@ cc_test(
         ":formatter",
         "//common/strings:position",
         "//common/util:logging",
+        "@com_google_absl//absl/status",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "tree_reshaper_test",
+    srcs = ["tree_reshaper_test.cc"],
+    deps = [
+        ":format_style",
+        ":formatter",
+        "//common/formatting:tree_reshaper",
+        "//common/formatting:tree_unwrapper",
+        "//common/strings:position",
+        "//common/util:logging",
+        "//verilog/analysis:verilog_analyzer",
         "@com_google_absl//absl/status",
         "@com_google_absl//absl/strings",
         "@com_google_googletest//:gtest_main",
