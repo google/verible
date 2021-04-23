@@ -38,7 +38,6 @@ cc_library(
         ":generate_label_rule",
         ":interface_name_style_rule",
         ":instance_shadow_rule",
-        ":legacy_genvar_declaration_rule",
         ":legacy_generate_region_rule",
         ":legacy_genvar_declaration_rule",
         ":line_length_rule",
