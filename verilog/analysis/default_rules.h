@@ -24,7 +24,6 @@ namespace analysis {
 // LINT.IfChange
 constexpr const char* kDefaultRuleSet[] = {
     "invalid-system-task-function",
-    "instance-shadowing",
     "module-begin-block",
     "module-parameter",
     "module-port",
@@ -75,6 +74,7 @@ constexpr const char* kDefaultRuleSet[] = {
     // TODO: "banned-declared-name-patterns",
     // TODO: "port-name-suffix",
     // "endif-comment",
+    // "instance-shadowing",
 };
 // LINT.ThenChange(../tools/lint/BUILD)
 //   Update integration tests for rulesets.
