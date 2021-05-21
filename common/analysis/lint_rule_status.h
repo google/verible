@@ -98,12 +98,14 @@ class AutoFix {
 struct LintViolation {
   // This construct records a token stream lint violation.
   LintViolation(const TokenInfo& token, const std::string& reason,
-                std::initializer_list<AutoFix> autofixes = {})
+                std::initializer_list<AutoFix> autofixes = {},
+                const std::vector<TokenInfo>& tokens = {})
       : root(nullptr),
         token(token),
         reason(reason),
         context(),
-        autofixes(autofixes) {}
+        autofixes(autofixes),
+        related_tokens(tokens) {}
 
   // This construct records a token stream lint violation.
   // with additional tokens that might be related somehow with vulnerable token
@@ -119,12 +121,14 @@ struct LintViolation {
   // Use this variation when the violation can be localized to a single token.
   LintViolation(const TokenInfo& token, const std::string& reason,
                 const SyntaxTreeContext& context,
-                std::initializer_list<AutoFix> autofixes = {})
+                std::initializer_list<AutoFix> autofixes = {},
+                const std::vector<TokenInfo>& tokens = {})
       : root(nullptr),
         token(token),
         reason(reason),
         context(context),
-        autofixes(autofixes) {}
+        autofixes(autofixes),
+        related_tokens(tokens) {}
 
   // This construct records a syntax tree lint violation.
   // Use this variation when the range of violation is a subtree that spans
@@ -152,7 +156,6 @@ struct LintViolation {
 
   const std::vector<AutoFix> autofixes;
 
-  // additional tokens that interact somehow with
   // Additional tokens that are related somehow to
   // vulnerable token
   const std::vector<TokenInfo> related_tokens;
