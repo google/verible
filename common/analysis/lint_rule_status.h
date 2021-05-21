@@ -240,7 +240,7 @@ class LintStatusFormatter {
                        absl::string_view url,
                        absl::string_view rule_name) const;
 
-  // Substitute the markers \@ with tokens location
+  // Substitute the markers `@` with tokens location
   // this allows us to create custom reason msg
   // with different token location that are related to found
   // vulnerable token
