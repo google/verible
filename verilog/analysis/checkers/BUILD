@@ -653,6 +653,7 @@ cc_library(
     name = "enum_name_style_rule",
     srcs = ["enum_name_style_rule.cc"],
     hdrs = ["enum_name_style_rule.h"],
+    copts = ["-fexceptions"],
     deps = [
         "//common/analysis:citation",
         "//common/analysis:lint_rule_status",
@@ -660,6 +661,7 @@ cc_library(
         "//common/analysis/matcher",
         "//common/analysis/matcher:bound_symbol_manager",
         "//common/strings:naming_utils",
+        "//common/text:config_utils",
         "//common/text:symbol",
         "//common/text:syntax_tree_context",
         "//verilog/CST:type",
@@ -667,6 +669,7 @@ cc_library(
         "//verilog/analysis:descriptions",
         "//verilog/analysis:lint_rule_registry",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
     ],
     alwayslink = 1,
 )
@@ -683,6 +686,7 @@ cc_test(
         "//verilog/analysis:verilog_analyzer",
         "//verilog/parser:verilog_token_enum",
         "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -1413,6 +1417,7 @@ cc_library(
     name = "constraint_name_style_rule",
     srcs = ["constraint_name_style_rule.cc"],
     hdrs = ["constraint_name_style_rule.h"],
+    copts = ["-fexceptions"],
     deps = [
         "//common/analysis:citation",
         "//common/analysis:lint_rule_status",
@@ -1420,6 +1425,7 @@ cc_library(
         "//common/analysis/matcher",
         "//common/analysis/matcher:bound_symbol_manager",
         "//common/strings:naming_utils",
+        "//common/text:config_utils",
         "//common/text:symbol",
         "//common/text:syntax_tree_context",
         "//common/text:token_info",
@@ -1429,6 +1435,7 @@ cc_library(
         "//verilog/analysis:lint_rule_registry",
         "//verilog/parser:verilog_token_enum",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
     ],
     alwayslink = 1,
 )
@@ -1445,6 +1452,7 @@ cc_test(
         "//verilog/analysis:verilog_analyzer",
         "//verilog/parser:verilog_token_enum",
         "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -1630,6 +1638,7 @@ cc_library(
     name = "parameter_type_name_style_rule",
     srcs = ["parameter_type_name_style_rule.cc"],
     hdrs = ["parameter_type_name_style_rule.h"],
+    copts = ["-fexceptions"],
     deps = [
         "//common/analysis:citation",
         "//common/analysis:lint_rule_status",
@@ -1640,12 +1649,14 @@ cc_library(
         "//common/text:symbol",
         "//common/text:syntax_tree_context",
         "//common/text:token_info",
+        "//common/text:config_utils",
         "//verilog/CST:parameters",
         "//verilog/CST:verilog_matchers",
         "//verilog/analysis:descriptions",
         "//verilog/analysis:lint_rule_registry",
         "//verilog/parser:verilog_token_enum",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
     ],
     alwayslink = 1,
 )
@@ -1662,6 +1673,7 @@ cc_test(
         "//verilog/analysis:verilog_analyzer",
         "//verilog/parser:verilog_token_enum",
         "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -1887,6 +1899,7 @@ cc_library(
         "//verilog/analysis:descriptions",
         "//verilog/analysis:lint_rule_registry",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
     ],
     alwayslink = 1,
 )
@@ -1903,6 +1916,7 @@ cc_test(
         "//verilog/analysis:verilog_analyzer",
         "//verilog/parser:verilog_token_enum",
         "@com_google_googletest//:gtest_main",
+        "@com_google_absl//absl/strings",
     ],
 )
 
@@ -1910,6 +1924,7 @@ cc_library(
     name = "struct_union_name_style_rule",
     srcs = ["struct_union_name_style_rule.cc"],
     hdrs = ["struct_union_name_style_rule.h"],
+    copts = ["-fexceptions"],
     deps = [
         "//common/analysis:citation",
         "//common/analysis:lint_rule_status",
@@ -1925,6 +1940,7 @@ cc_library(
         "//verilog/analysis:descriptions",
         "//verilog/analysis:lint_rule_registry",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
     ],
     alwayslink = 1,
 )
@@ -1949,6 +1965,7 @@ cc_library(
     name = "interface_name_style_rule",
     srcs = ["interface_name_style_rule.cc"],
     hdrs = ["interface_name_style_rule.h"],
+    copts = ["-fexceptions"],
     deps = [
         "//common/analysis:citation",
         "//common/analysis:lint_rule_status",
@@ -1958,6 +1975,7 @@ cc_library(
         "//common/strings:naming_utils",
         "//common/text:symbol",
         "//common/text:syntax_tree_context",
+        "//common/text:config_utils",
         "//verilog/CST:module",
         "//verilog/CST:type",
         "//verilog/CST:verilog_matchers",
