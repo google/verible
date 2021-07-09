@@ -727,6 +727,14 @@ class DataDeclarationColumnSchemaScanner : public ColumnSchemaScanner {
   bool new_column_after_open_bracket_ = false;
 };
 
+static SyntaxTreePath GetSubpath(
+    const SyntaxTreePath& path,
+    std::initializer_list<SyntaxTreePath::value_type> subpositions) {
+  auto subpath = path;
+  subpath.insert(subpath.end(), subpositions);
+  return subpath;
+}
+
 // This class marks up token-subranges in class member variable (data
 // declarations) for alignment. e.g. "const int [3:0] member_name;" For now,
 // re-use the same column scanner as data/variable/net declarations.
@@ -744,6 +752,40 @@ class ClassPropertyColumnSchemaScanner : public ColumnSchemaScanner {
         // Don't wait for the type node, just start the first column right away.
         ReserveNewColumn(node, FlushLeft);
         break;
+      }
+      case NodeEnum::kDimensionScalar: {
+        CHECK_EQ(node.children().size(), 3);
+        auto* column = ReserveNewColumn(node, FlushLeft);
+        CHECK_NOTNULL(column);
+        // '['
+        ReserveNewColumn(*column, *node[0], FlushLeft, GetSubpath(Path(), {0}));
+        // value
+        ReserveNewColumn(*column, *node[1], FlushRight,
+                         GetSubpath(Path(), {1}));
+        // ']' - align with ']' from ranges
+        ReserveNewColumn(*column, *node[2], FlushLeft, GetSubpath(Path(), {2}));
+        return;
+      }
+      case NodeEnum::kDimensionRange: {
+        CHECK_EQ(node.children().size(), 5);
+        auto* column = ReserveNewColumn(node, FlushLeft);
+        CHECK_NOTNULL(column);
+        // '['
+        ReserveNewColumn(*column, *node[0], FlushLeft, GetSubpath(Path(), {0}));
+        // left-hand side value
+        auto* subcolumn = ReserveNewColumn(*column, *node[1], FlushRight,
+                                           GetSubpath(Path(), {1}));
+        ReserveNewColumn(*subcolumn, *node[1], FlushRight,
+                         GetSubpath(Path(), {1, 0}));
+        // ':'
+        ReserveNewColumn(*subcolumn, *node[2], FlushLeft,
+                         GetSubpath(Path(), {1, 1}));
+        // right-hand side value
+        ReserveNewColumn(*subcolumn, *node[3], FlushLeft,
+                         GetSubpath(Path(), {1, 2}));
+        // ']'
+        ReserveNewColumn(*column, *node[4], FlushLeft, GetSubpath(Path(), {2}));
+        return;
       }
       default:
         break;
@@ -1077,11 +1119,31 @@ class DistItemColumnSchemaScanner : public ColumnSchemaScanner {
     switch (tag) {
       case NodeEnum::kDistributionItem:
         // Start first column right away.
-        ReserveNewColumn(node, FlushLeft);
+        item_column_ = ReserveNewColumn(node, FlushLeft);
         break;
-
-        // TODO(fangism): the left-hand-side may contain [x:y] ranges that could
-        // be further aligned.
+      case NodeEnum::kValueRange: {
+        if (!Context().DirectParentIs(NodeEnum::kDistributionItem)) {
+          break;
+        }
+        CHECK_EQ(node.children().size(), 5);
+        CHECK_NOTNULL(item_column_);
+        // '['
+        ReserveNewColumn(*item_column_, *node[0], FlushLeft,
+                         GetSubpath(Path(), {0}));
+        // left-hand side value
+        ReserveNewColumn(*item_column_, *node[1], FlushRight,
+                         GetSubpath(Path(), {1}));
+        // ':'
+        ReserveNewColumn(*item_column_, *node[2], FlushLeft,
+                         GetSubpath(Path(), {2}));
+        // right-hand side value
+        ReserveNewColumn(*item_column_, *node[3], FlushLeft,
+                         GetSubpath(Path(), {3}));
+        // ']'
+        ReserveNewColumn(*item_column_, *node[4], FlushLeft,
+                         GetSubpath(Path(), {4}));
+        return;
+      }
       default:
         break;
     }
@@ -1100,6 +1162,9 @@ class DistItemColumnSchemaScanner : public ColumnSchemaScanner {
         break;
     }
   }
+
+ private:
+  verible::ColumnPositionTree* item_column_ = nullptr;
 };
 
 static std::function<
