@@ -260,6 +260,16 @@ cc_library(
 )
 
 cc_library(
+    name = "vector_tree_iterators",
+    hdrs = ["vector_tree_iterators.h"],
+    deps = [
+        ":iterator_range",
+        ":logging",
+        ":vector_tree",
+    ],
+)
+
+cc_library(
     name = "map_tree",
     hdrs = ["map_tree.h"],
     deps = [
