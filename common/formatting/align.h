@@ -76,6 +76,15 @@ class ColumnSchemaScanner : public TreeContextPathVisitor {
   const ColumnPositionTree& SparseColumns() const { return sparse_columns_; }
 
  protected:
+  // Returns subpath relative to base_path
+  static SyntaxTreePath GetSubpath(
+      const SyntaxTreePath& base_path,
+      std::initializer_list<SyntaxTreePath::value_type> subpositions) {
+    auto subpath = base_path;
+    subpath.insert(subpath.end(), subpositions);
+    return subpath;
+  }
+
   // Mark the start of a new column for alignment.
   // 'symbol' is a reference to the original source syntax subtree.
   // 'properties' contains alignment configuration for the column.
@@ -93,12 +102,16 @@ class ColumnSchemaScanner : public TreeContextPathVisitor {
   // Reserve a column using the current path as the key.
   ColumnPositionTree* ReserveNewColumn(
       const Symbol& symbol, const AlignmentColumnProperties& properties) {
-    return ReserveNewColumn(symbol, properties, Path());
+    return ReserveNewColumn(sparse_columns_, symbol, properties, Path());
   }
+  // Reserve a subcolumn using subcolumn number appended to the parent's path
+  // as the key.
   ColumnPositionTree* ReserveNewColumn(
       ColumnPositionTree& parent_column, const Symbol& symbol,
       const AlignmentColumnProperties& properties) {
-    return ReserveNewColumn(parent_column, symbol, properties, Path());
+    auto subpath = GetSubpath(parent_column.Value().path,
+                              {parent_column.Children().size()});
+    return ReserveNewColumn(parent_column, symbol, properties, subpath);
   }
 
  private:
