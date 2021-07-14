@@ -727,14 +727,6 @@ class DataDeclarationColumnSchemaScanner : public ColumnSchemaScanner {
   bool new_column_after_open_bracket_ = false;
 };
 
-static SyntaxTreePath GetSubpath(
-    const SyntaxTreePath& path,
-    std::initializer_list<SyntaxTreePath::value_type> subpositions) {
-  auto subpath = path;
-  subpath.insert(subpath.end(), subpositions);
-  return subpath;
-}
-
 // This class marks up token-subranges in class member variable (data
 // declarations) for alignment. e.g. "const int [3:0] member_name;" For now,
 // re-use the same column scanner as data/variable/net declarations.
@@ -755,36 +747,28 @@ class ClassPropertyColumnSchemaScanner : public ColumnSchemaScanner {
       }
       case NodeEnum::kDimensionScalar: {
         CHECK_EQ(node.children().size(), 3);
-        auto* column = ReserveNewColumn(node, FlushLeft);
-        CHECK_NOTNULL(column);
-        // '['
-        ReserveNewColumn(*column, *node[0], FlushLeft, GetSubpath(Path(), {0}));
-        // value
-        ReserveNewColumn(*column, *node[1], FlushRight,
-                         GetSubpath(Path(), {1}));
-        // ']' - align with ']' from ranges
-        ReserveNewColumn(*column, *node[2], FlushLeft, GetSubpath(Path(), {2}));
+        auto* column = ABSL_DIE_IF_NULL(ReserveNewColumn(node, FlushLeft));
+
+        ReserveNewColumn(*column, *node[0], FlushLeft);   // '['
+        ReserveNewColumn(*column, *node[1], FlushRight);  // value
+        ReserveNewColumn(*column, *node[2], FlushLeft);   // ']'
         return;
       }
       case NodeEnum::kDimensionRange: {
         CHECK_EQ(node.children().size(), 5);
-        auto* column = ReserveNewColumn(node, FlushLeft);
-        CHECK_NOTNULL(column);
-        // '['
-        ReserveNewColumn(*column, *node[0], FlushLeft, GetSubpath(Path(), {0}));
-        // left-hand side value
-        auto* subcolumn = ReserveNewColumn(*column, *node[1], FlushRight,
-                                           GetSubpath(Path(), {1}));
-        ReserveNewColumn(*subcolumn, *node[1], FlushRight,
-                         GetSubpath(Path(), {1, 0}));
-        // ':'
-        ReserveNewColumn(*subcolumn, *node[2], FlushLeft,
-                         GetSubpath(Path(), {1, 1}));
-        // right-hand side value
-        ReserveNewColumn(*subcolumn, *node[3], FlushLeft,
-                         GetSubpath(Path(), {1, 2}));
-        // ']'
-        ReserveNewColumn(*column, *node[4], FlushLeft, GetSubpath(Path(), {2}));
+        auto* column = ABSL_DIE_IF_NULL(ReserveNewColumn(node, FlushLeft));
+
+        SyntaxTreePath np;
+        VLOG(4) << TreePathFormatter(Path());
+        ReserveNewColumn(*column, *node[0], FlushLeft);  // '['
+
+        auto* value_subcolumn =
+            ABSL_DIE_IF_NULL(ReserveNewColumn(*column, *node[1], FlushRight));
+        ReserveNewColumn(*value_subcolumn, *node[1], FlushRight);  // LHS value
+        ReserveNewColumn(*value_subcolumn, *node[2], FlushLeft);   // ':'
+        ReserveNewColumn(*value_subcolumn, *node[3], FlushLeft);   // RHS value
+
+        ReserveNewColumn(*column, *node[4], FlushLeft);  // ']'
         return;
       }
       default:
@@ -1127,21 +1111,17 @@ class DistItemColumnSchemaScanner : public ColumnSchemaScanner {
         }
         CHECK_EQ(node.children().size(), 5);
         CHECK_NOTNULL(item_column_);
-        // '['
         ReserveNewColumn(*item_column_, *node[0], FlushLeft,
-                         GetSubpath(Path(), {0}));
-        // left-hand side value
+                         GetSubpath(Path(), {0}));  // '['
         ReserveNewColumn(*item_column_, *node[1], FlushRight,
-                         GetSubpath(Path(), {1}));
-        // ':'
+                         GetSubpath(Path(), {1}));  // LHS value
         ReserveNewColumn(*item_column_, *node[2], FlushLeft,
-                         GetSubpath(Path(), {2}));
-        // right-hand side value
+                         GetSubpath(Path(), {2}));  // ':'
         ReserveNewColumn(*item_column_, *node[3], FlushLeft,
-                         GetSubpath(Path(), {3}));
-        // ']'
+                         GetSubpath(Path(), {3}));  // RHS value
         ReserveNewColumn(*item_column_, *node[4], FlushLeft,
-                         GetSubpath(Path(), {4}));
+                         GetSubpath(Path(), {4}));  // ']'
+        item_column_ = nullptr;
         return;
       }
       default:
