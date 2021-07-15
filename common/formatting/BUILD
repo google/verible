@@ -28,7 +28,10 @@ cc_library(
         "//common/util:algorithm",
         "//common/util:container_iterator_range",
         "//common/util:enum_flags",
+        "//common/util:iterator_range",
         "//common/util:logging",
+        "//common/util:vector_tree",
+        "//common/util:vector_tree_iterators",
         "@com_google_absl//absl/strings",
     ],
 )

@@ -260,6 +260,16 @@ cc_library(
 )
 
 cc_library(
+    name = "vector_tree_iterators",
+    hdrs = ["vector_tree_iterators.h"],
+    deps = [
+        ":iterator_range",
+        ":logging",
+        ":vector_tree",
+    ],
+)
+
+cc_library(
     name = "map_tree",
     hdrs = ["map_tree.h"],
     deps = [
@@ -484,6 +494,18 @@ cc_test(
     srcs = ["expandable_tree_view_test.cc"],
     deps = [
         ":expandable_tree_view",
+        ":vector_tree",
+        ":vector_tree_test_util",
+        "@com_google_absl//absl/strings",
+        "@com_google_googletest//:gtest_main",
+    ],
+)
+
+cc_test(
+    name = "vector_tree_iterators_test",
+    srcs = ["vector_tree_iterators_test.cc"],
+    deps = [
+        ":vector_tree_iterators",
         ":vector_tree",
         ":vector_tree_test_util",
         "@com_google_absl//absl/strings",

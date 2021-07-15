@@ -3528,7 +3528,7 @@ static constexpr FormatterTestCase kFormatterTestCases[] = {
      "int foo_bar ;\n"
      "endclass : c\n",
      "class c;\n"
-     "  int foo[$];\n"
+     "  int foo     [$];\n"
      "  int foo_bar;\n"
      "endclass : c\n"},
     {// aligns over comments (ignored)
@@ -3569,14 +3569,13 @@ static constexpr FormatterTestCase kFormatterTestCases[] = {
      "  // llama is...\n"
      "  logic     llama;\n"
      "endclass : c\n"},
-    {// array dimensions do not have their own columns
-     "class c;\n"
+    {"class c;\n"
      "rand logic l;\n"
      "int [1:0] foo;\n"
      "endclass : c\n",
      "class c;\n"
-     "  rand logic l;\n"
-     "  int [1:0]  foo;\n"
+     "  rand logic       l;\n"
+     "  int        [1:0] foo;\n"
      "endclass : c\n"},
     {// non-data-declarations break up groups
      "class c;\n"
