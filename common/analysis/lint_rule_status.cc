@@ -23,6 +23,7 @@
 #include <vector>
 
 #include "absl/strings/str_cat.h"
+#include "absl/strings/str_replace.h"
 #include "absl/strings/string_view.h"
 #include "common/strings/line_column_map.h"
 #include "common/text/concrete_syntax_leaf.h"
@@ -74,12 +75,14 @@ static TokenInfo SymbolToToken(const Symbol& root) {
 
 LintViolation::LintViolation(const Symbol& root, const std::string& reason,
                              const SyntaxTreeContext& context,
-                             std::initializer_list<AutoFix> autofixes)
+                             std::initializer_list<AutoFix> autofixes,
+                             const std::vector<TokenInfo>& tokens)
     : root(&root),
       token(SymbolToToken(root)),
       reason(reason),
       context(context),
-      autofixes(autofixes) {}
+      autofixes(autofixes),
+      related_tokens(tokens) {}
 
 void LintStatusFormatter::FormatLintRuleStatus(std::ostream* stream,
                                                const LintRuleStatus& status,
@@ -104,6 +107,36 @@ struct LintViolationWithStatus {
     return violation->token.text().data() < r.violation->token.text().data();
   }
 };
+
+std::string LintStatusFormatter::ReplaceWithHelperTokens(
+    const std::vector<verible::TokenInfo>& tokens, absl::string_view reason,
+    absl::string_view path, absl::string_view base) const {
+  if (tokens.empty()) {
+    return std::string(reason);
+  }
+
+  size_t end_pos = reason.find("@", 0), beg_pos = 0;
+  std::ostringstream s;
+  for (const auto& token : tokens) {
+    if (end_pos == std::string_view::npos) {
+      s << reason.substr(beg_pos);
+      break;
+    }
+
+    if (!(end_pos != 0 && reason[end_pos - 1] == '\\')) {
+      s << reason.substr(beg_pos, end_pos - beg_pos);
+      s << path << ":";
+      s << line_column_map_(token.left(base));
+    } else {
+      s << reason.substr(beg_pos, end_pos - beg_pos + 1);
+    }
+
+    beg_pos = end_pos + 1;
+    end_pos = reason.find("@", beg_pos);
+  }
+
+  return absl::StrReplaceAll(s.str(), {{"\\@", "@"}});
+}
 
 void LintStatusFormatter::FormatLintRuleStatuses(
     std::ostream* stream, const std::vector<LintRuleStatus>& statuses,
@@ -144,8 +177,10 @@ void LintStatusFormatter::FormatViolation(std::ostream* stream,
   // TODO(fangism): Use the context member to print which named construct or
   // design element the violation appears in (or full stack thereof).
   (*stream) << path << ':' << line_column_map_(violation.token.left(base))
-            << ": " << violation.reason << ' ' << url << " [" << rule_name
-            << ']';
+            << ": "
+            << ReplaceWithHelperTokens(violation.related_tokens,
+                                       violation.reason, path, base)
+            << ' ' << url << " [" << rule_name << ']';
 }
 
 void LintRuleStatus::WaiveViolations(
