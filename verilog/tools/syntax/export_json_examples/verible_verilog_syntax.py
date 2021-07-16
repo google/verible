@@ -17,7 +17,7 @@ import collections
 import json
 import re
 import subprocess
-from typing import Any, Callable, Dict, Iterable, List, Optional, Union
+from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence, Union
 
 import anytree
 import dataclasses
@@ -370,11 +370,58 @@ class VeribleVerilogSyntax:
   This class provides methods for running ``verible-verilog-syntax`` and
   transforming its output into Python data structures.
 
+  Attributes:
+    executable (str): path to ``verible-verilog-syntax`` binary.
+    version (str): ``verible-verilog-syntax`` version
+
   Args:
     executable: path to ``verible-verilog-syntax`` binary.
   """
 
-  def __init__(self, executable: str = "verible-verilog-syntax"):
+  _VERSION_RE = re.compile(r"^v([0-9]+)\.([0-9]+)-([0-9]+)-g[0-9a-fA-F]+$",
+      re.MULTILINE)
+  _EXPORT_JSON_RE = re.compile(r"(^|\s)--export_json\b")
+  _MIN_VERSION = "v0.0-925-gc1a388a"
+
+  def __init__(self, executable: Union[str, List[str]] = "verible-verilog-syntax"):
+    if isinstance(executable, str):
+      executable = [executable]
+
+    proc = subprocess.run([*executable, "--version"], stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT, encoding="utf-8")
+
+    ver_match = self._VERSION_RE.match(proc.stdout)
+    if ver_match:
+      min_ver_match = self._VERSION_RE.match(self._MIN_VERSION)
+      assert min_ver_match
+
+      def check_version(ver: Sequence[str], min_ver: Sequence[str]) -> bool:
+        assert len(ver) == len(min_ver)
+        for n, min_n in zip(ver, min_ver):
+          n = int(n, base=10)
+          min_n = int(min_n, base=10)
+          if n > min_n: return True
+          elif n < min_n: return False
+        return True
+
+      if not check_version(ver_match.groups(), min_ver_match.groups()):
+        raise Exception("verible-verilog-syntax version is too old: "
+            f"{ver_match.group()}. "
+            f"Minimum required version: {self._MIN_VERSION}.")
+
+      self.version = ver_match.group()
+
+    else:
+      # Version not available; check help message for `--export_json` flag
+      proc = subprocess.run([*executable, "--helpfull"], stdout=subprocess.PIPE,
+          stderr=subprocess.STDOUT, encoding="utf-8")
+
+      if not self._EXPORT_JSON_RE.search(proc.stdout):
+        raise Exception("Unsupported verible-verilog-syntax version."
+            f"Minimum required version: {self._MIN_VERSION}.")
+
+      self.version = ""
+
     self.executable = executable
 
   @staticmethod
@@ -406,11 +453,9 @@ class VeribleVerilogSyntax:
     tag = tree["tag"]
     return RootNode(tag, syntax_data=data, children=children)
 
-
   @staticmethod
   def _transform_tokens(tokens, data: SyntaxData) -> List[Token]:
     return [Token(t["tag"], t["start"], t["end"], data) for t in tokens]
-
 
   @staticmethod
   def _transform_errors(tokens) -> List[Error]:
@@ -436,7 +481,7 @@ class VeribleVerilogSyntax:
     if options["gen_rawtokens"]:
       args.append("-printrawtokens")
 
-    proc = subprocess.run([self.executable, *args , *paths],
+    proc = subprocess.run([*self.executable, *args , *paths],
         stdout=subprocess.PIPE,
         input=input_,
         encoding="utf-8",
